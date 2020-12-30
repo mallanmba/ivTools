@@ -1,0 +1,238 @@
+include $(IVDEPTH)/make/system
+include $(IVDEPTH)/make/commondefs
+
+IVCOMMONRULES = $(IVDEPTH)/make/ivcommonrules
+
+
+
+#
+# Coin port (appened by PCJohn)
+#
+
+# INVENTOR_LIB = -lInventor
+INVENTOR_LIB = -lCoin
+# INVENTOR_XT_LIB = -lInventorXt
+#INVENTOR_XT_LIB = `soxt-config --ldflags` `soxt-config --libs`
+INVENTOR_XT_LIB = -lSoXt
+
+
+
+#
+# Settings for systems without single-precision math functions.
+#
+
+MATHDEFS = -D_DOUBLE_MATH_ONLY
+
+
+
+#
+# Settings for IRIX systems.
+#
+
+ifeq ($(usingIrix), 1)
+
+# Define this to have menus appear in the popup planes instead of the normal
+# planes. You lose menu colors, but don't have to redraw the scene just to see
+# a menu.
+LCXXDEFS += -DMENUS_IN_POPUP
+
+LD = $(TOOLROOT)/usr/bin/CC
+LLDDSOOPTS += -Wl,-full_transitive_link
+LLDOPTS += -Wl,-full_transitive_link
+LD_QUICKSTART_INFO =
+
+endif
+
+
+
+#
+# Assume FreeBSD options are the same as those for Linux.
+#
+
+ifeq ($(usingFreeBSD), 1)
+usingLinux = 1
+endif
+
+
+
+#
+# Override variables in commondefs when building on Linux systems.
+#
+
+ifeq ($(usingLinux), 1)
+
+# my Linux administrator told me, that it is not a good idea 
+# to place absolute paths for compilers. PCJohn 2005-03-17
+#CC  = /usr/bin/gcc
+#C++ = /usr/bin/g++
+#LD  = /usr/bin/g++
+CC  = gcc
+C++ = g++
+LD  = g++
+
+INSTALL = /usr/bin/install
+
+# MKDEPOPT = -MD
+
+GLDDSOOPTS = -shared -Wl,--whole-archive
+POST_LDDSOOPTS = -Wl,--no-whole-archive
+
+endif
+
+
+
+#
+# Additional settings for Linux systems and GNU compilers.
+#
+
+ifeq ($(usingLinux), 1)
+
+LINUXOPTS = -fPIC
+LCXXOPTS += $(LINUXOPTS)
+LCOPTS += $(LINUXOPTS)
+
+X11DIR = /usr/X11R6
+X11INCDIR = $(X11DIR)/include
+X11LIBDIR = $(X11DIR)/lib
+
+LCXXINCS += -I$(X11INCDIR)
+LCINCS += -I$(X11INCDIR)
+
+LDDSOOPTS += -L$(X11LIBDIR)
+LDOPTS += -L$(X11LIBDIR)
+
+endif
+
+
+
+#
+# Settings for Apple Darwin (Mac OS X) systems.
+#
+
+ifeq ($(usingDarwin), 1)
+
+FREETYPE = 1
+
+CC  = /usr/bin/gcc
+C++ = /usr/bin/g++
+LD  = /usr/bin/libtool
+
+ARFLAGS = vrs
+INSTALL = /usr/bin/install
+
+LCXXDEFS += $(MATHDEFS)
+LCDEFS += $(MATHDEFS)
+
+DARWINOPTS = -dynamic -fno-common
+LCXXOPTS += $(DARWINOPTS)
+LCOPTS += $(DARWINOPTS)
+
+X11DIR = /usr/X11R6
+X11INCDIR = $(X11DIR)/include
+X11LIBDIR = $(X11DIR)/lib
+
+LCXXINCS += -I$(X11INCDIR)
+LCINCS += -I$(X11INCDIR) -I$(X11INCDIR)/freetype2
+
+LDDSOOPTS += -dynamic -all_load -L$(X11LIBDIR)
+LDOPTS += -multiply_defined suppress -L$(X11LIBDIR)
+CXXDSOOPTS += -bundle -flat_namespace -undefined suppress -L$(X11LIBDIR)
+
+LOCALRULES = $(IVDEPTH)/make/localrules.apple
+
+endif
+
+
+
+#
+# Determine optimization from LIBTYPE.
+#
+
+OPTIMIZER = -O -DNDEBUG
+ifneq (, $(findstring debug, $(LIBTYPE)))
+OPTIMIZER = -g
+endif
+
+
+
+#
+# Inventor library include directories.
+#
+
+# This is for original SGI Inventor sources
+#IVLIBHDRDIRS = \
+#	-I. \
+#	-I$(IVDEPTH)/lib/database/include \
+#	-I$(IVDEPTH)/lib/interaction/include \
+#	-I$(IVDEPTH)/lib/nodekits/include \
+#	-I$(IVDEPTH)/libSoXt/include
+
+# Coin port does not require include directories
+IVLIBHDRDIRS =
+
+LCXXINCS += $(IVLIBHDRDIRS)
+LCINCS += $(IVLIBHDRDIRS)
+
+
+
+#
+# Font library directories.
+#
+
+FLDIR = $(IVDEPTH)/libFL/src
+FLLIB = -lFL
+ifdef FREETYPE
+FLDIR = $(IVDEPTH)/libFL/freetype
+FLLIB += -lfreetype
+endif
+
+
+
+#
+# Tools for generating Inventor man pages.
+#
+
+IVPPPDIR = $(IVDEPTH)/tools/ppp
+IVPPP = $(IVPPPDIR)/ppp
+IVMANDIR = $(shell dirname $(IVDEPTH))/doc/man/ivman
+IVMAN = $(IVMANDIR)/ivman
+MAKEMANDIRS = $(IVMANDIR)/makeManDirs
+
+
+
+#
+# Inventor install directories.
+#
+
+IVPREFIX = /usr
+LCXXOPTS += -DIVPREFIX=\"$(IVPREFIX)\"
+LCOPTS += -DIVPREFIX=\"$(IVPREFIX)\"
+
+IVBINDIR = $(IVROOT)/$(IVPREFIX)/bin
+IVLIBDIR = $(IVROOT)/$(IVPREFIX)/lib
+IVDLIBDIR = $(IVLIBDIR)/InventorDebug
+IVHDRTOP = $(IVROOT)/$(IVPREFIX)/include/Inventor
+IVHDRDIR = $(IVHDRTOP)/$(HDRSUBDIR)
+IVMAN1DIR = $(IVROOT)/$(IVPREFIX)/man/man1
+IVMAN3DIR = $(IVROOT)/$(IVPREFIX)/man/man3
+IVHELPDIR = $(IVROOT)/$(IVPREFIX)/share/help
+IVDATADIR = $(IVROOT)/$(IVPREFIX)/share/data/models
+IVDEMODIR = $(IVROOT)/$(IVPREFIX)/demos
+IVDEMOBINDIR = $(IVDEMODIR)/Inventor
+IVDEMODATADIR = $(IVDEMODIR)/data/Inventor
+
+
+
+#
+# Locate installed Inventor libraries when linking applications.
+#
+
+ifneq (, $(findstring debug, $(LIBTYPE)))
+LLDDSOOPTS += -L$(IVDLIBDIR)
+LLDOPTS += -L$(IVDLIBDIR)
+CXXDSOOPTS += -L$(IVDLIBDIR)
+else
+LLDDSOOPTS += -L$(IVLIBDIR)
+LLDOPTS += -L$(IVLIBDIR)
+CXXDSOOPTS += -L$(IVLIBDIR)
+endif

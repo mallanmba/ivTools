@@ -1,0 +1,13 @@
+IVDEPTH = ..
+include $(IVDEPTH)/make/ivcommondefs
+
+PROGRAM = ivToIncludeFile
+
+CXXFILES = ivToIncludeFile.cpp ../make/Common.cpp
+
+#LLDLIBS = -lInventor -lInventorXt
+LLDLIBS = $(INVENTOR_LIB)
+
+all: all_ivbin
+
+include $(IVCOMMONRULES)

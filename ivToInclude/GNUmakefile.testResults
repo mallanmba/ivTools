@@ -1,0 +1,15 @@
+IVDEPTH = ..
+include $(IVDEPTH)/make/ivcommondefs
+
+PROGRAM = testResults
+
+CXXFILES = testResults.cpp
+
+CXXFLAGS += `soqt-config --cppflags`
+
+#LLDLIBS = -lInventor -lInventorXt
+LLDLIBS = `soqt-config --ldflags` `soqt-config --libs`
+
+all: all_ivbin
+
+include $(IVCOMMONRULES)

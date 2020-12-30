@@ -1,0 +1,135 @@
+include $(COMMONRULES)
+
+
+
+#
+# Rule for generating C++ from shape source code in PP format.
+#
+
+.SUFFIXES: .pp
+
+.pp.cpp:
+	$(IVPPP) < $< > $@
+
+SHAPEFILES = $(PPFILES:.pp=.cpp)
+
+LDIRT += $(SHAPEFILES)
+
+
+
+#
+# Rules for building and installing Inventor and InventorXt DSO's.
+#
+
+$(LIBDSO): $(LARCHIVE)
+	$(LD) $(LDDSOOPTS) $^ $(LDLIBS) $(POST_LDDSOOPTS) -o $@
+
+$(LARCHIVE):
+	for i in $(SUBDIRS); do $(MAKE) -C$$i all || exit 1; done
+	$(RM) $(LARCHIVE)
+	$(AR) $(ARFLAGS) $(LARCHIVE) $(OBJECTS)
+
+install_ivlibdso: $(LIBDSO)
+	mkdir -p $(IVLIBDIR)
+	$(INSTALL) -m 755 $< $(IVLIBDIR)
+
+	if [ "$(LIBTYPE)" = "debug" ]; then \
+	  mkdir -p $(IVDLIBDIR); \
+	  $(INSTALL) -m 755 $< $(IVDLIBDIR); \
+	fi
+
+install_ivheaders:
+	mkdir -p $(IVHDRDIR)
+	for h in $(HEADERS); do $(INSTALL) -m 644 $$h $(IVHDRDIR); done
+
+LDIRT += $(LARCHIVE)
+
+
+
+#
+# Rules for creating and installing man pages from documentation in IVM format.
+#
+
+.SUFFIXES: .ivm .3iv
+
+.ivm.3iv:
+	(cd .. && $(IVMAN) `$(MAKEMANDIRS) $(*F)`) > $@
+
+MAN3PAGES = $(IVMFILES:.ivm=.3iv)
+
+all_man3iv: $(MAN3PAGES)
+
+install_man3iv: $(MAN3PAGES)
+	mkdir -p $(IVMAN3DIR)
+	for i in $^; do $(INSTALL) -m 644 $$i $(IVMAN3DIR); done
+
+install_man1: $(MAN1PAGES)
+	mkdir -p $(IVMAN1DIR)
+	for i in $^; do $(INSTALL) -m 644 $$i $(IVMAN1DIR); done
+
+LDIRT += $(MAN3PAGES)
+
+
+
+#
+# Rules for building and installing programs, archives, and DSO's in apps
+# directory.
+#
+
+$(PROGRAM): $(LTARGETS) $(OBJECTS)
+	$(CXX) $(LDOPTS) $(OBJECTS) $(LDLIBS) -o $@
+
+$(PROGRAMS_1): %: %.o
+	$(CXX) $(LDOPTS) $< $(LDLIBS) -o $@
+
+$(PROGRAMS_2): %: %.o $(OBJECTS)
+	$(CXX) $(LDOPTS) $< $(OBJECTS) $(LDLIBS) -o $@
+
+$(PROGRAMS_EXT):
+	$(MAKE) -f GNUmakefile.$@
+
+$(ARCHIVE): $(LTARGETS) $(OBJECTS)
+	$(AR) $(ARFLAGS) $@ $(OBJECTS)
+
+$(DSO): $(OBJECTS)
+	$(LD) $(LDDSOOPTS) $(OBJECTS) $(LDLIBS) $(POST_LDDSOOPTS) -o $@
+
+install_ivbin: $(PROGRAM)
+	mkdir -p $(IVBINDIR)
+	$(INSTALL) -m 755 $(PROGRAM) $(IVBINDIR)
+
+install_ivscript:
+	mkdir -p $(IVBINDIR)
+	$(INSTALL) -m 755 $(SCRIPT) $(IVBINDIR)
+	if [ "$(IVPREFIX)" != "/usr" ]; then \
+	  (cd $(IVBINDIR) && \
+	  sed -e 's#/usr#'"$(IVPREFIX)"'#g' $(SCRIPT) > tmp && \
+	  mv tmp $(SCRIPT)); \
+	fi
+
+install_ivdemo: $(DEMO)
+	mkdir -p $(IVDEMOBINDIR) $(IVDEMODATADIR)
+	$(INSTALL) -m 755 $(DEMO) $(IVDEMOBINDIR)
+	if [ -e $(DEMO).RUNME ]; then \
+	  $(INSTALL) -m 755 $(DEMO).RUNME $(IVDEMOBINDIR); \
+	  if [ "$(IVPREFIX)" != "/usr" ]; then \
+	    (cd $(IVDEMOBINDIR) && \
+	    sed -e 's#/usr#'"$(IVPREFIX)"'#g' $(DEMO).RUNME > tmp && \
+	    mv tmp $(DEMO).RUNME); \
+	  fi; \
+	fi
+	if [ -e $(DEMO).about ]; then \
+	  $(INSTALL) -m 644 $(DEMO).about $(IVDEMOBINDIR); \
+	fi
+
+
+
+#
+# Convenience assignments. TARGETS are removed by 'make clobber'.
+#
+
+all_ivbin: $(LIBDSO) $(PROGRAM) $(PROGRAMS_1) $(PROGRAMS_2) $(ARCHIVE) $(DSO) \
+		$(BUNDLE)
+
+TARGETS += $(LIBDSO) $(PROGRAM) $(PROGRAMS_1) $(PROGRAMS_2) $(PROGRAMS_EXT) \
+		$(ARCHIVE) $(DSO) $(BUNDLE)
