@@ -29,18 +29,19 @@ cmake .. -DCMAKE_INSTALL_PREFIX=/usr/local
 
 This directory contains the source code for the Open Inventor tools:
 
-ivcat   - Converts between binary and ASCII Inventor formats.
-ivinfo  - Prints out information on an Inventor file.
-ivnorm  - Generates normals for SoIndexedFaceSet objects.
-ivfix   - Restructures an Inventor scene for improved rendereing performance.
-ivview  - A simple viewer for quickly viewing Inventor files.
-ivAddVP - Converts files to use the vertex property fields.
-ivperf  - Analyzes rendering performance
-longToInt32 - Converts files to use type int32_t in place of long.
-ivvrml  - Converts between Inventor and vrml file formats 
-          (the utility is not in original SGI package)
-ivToInclude - Converts files into the c-style includable file.
-ivgraph - Prints scene graph structure.
+| tool        | Description |
+| ----------- | ----------- |
+| ivcat       | Converts between binary and ASCII Inventor formats.  |
+| ivinfo      | Prints out information on an Inventor file.          |
+| ivnorm      | Generates normals for SoIndexedFaceSet objects.      |
+| ivfix       | Restructures an Inventor scene for improved rendereing performance. |
+| ivview      | A simple viewer for quickly viewing Inventor files.  |
+| ivAddVP     | Converts files to use the vertex property fields.    |
+| ivperf      | Analyzes rendering performance                       |
+| longToInt32 | Converts files to use type int32_t in place of long. |
+| ivvrml      | Converts between Inventor and vrml file formats (the utility is not in original SGI package) |
+| ivToInclude | Converts files into the c-style includable file.     |
+| ivgraph     | Prints scene graph structure.                        |
 
 Each subdirectory contains the source code and include files needed to
 make the program.
