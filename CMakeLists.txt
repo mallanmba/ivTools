@@ -1,28 +1,21 @@
 cmake_minimum_required(VERSION 3.10)
-project( ivTools )
+project( iv_tools )
 
-## set up some defaults
-set( CMAKE_MODULE_PATH  ${PROJECT_SOURCE_DIR}/cmake/Modules ${CMAKE_MODULE_PATH})
+# disable some warnings - this is ancient code
+set( CMAKE_CXX_STANDARD 98 )
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wno-int-to-pointer-cast 
+                      -Wno-write-strings
+                      -Wno-literal-suffix)
+endif()
 
-include( SetArchitecture )
-include( SetupBuildSwitch )
-include( SetupWarnLevel )
-include( SetupRPATH )
+set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake/Modules)
 
+find_package( ament_cmake REQUIRED )
 find_package( Qt5 COMPONENTS Core Widgets OpenGL Xml REQUIRED )
-find_package( Coin3D )
-find_package( OpenGL )
+find_package( Coin3D REQUIRED )
+find_package( OpenGL COMPONENTS OpenGL GLX REQUIRED )
 find_package( X11 )
-
-## set default install to .local
-##------------------------------------------------
-set( ${PROJECT_UPPER}_INSTALL_PREFIX "$ENV{HOME}/.local" CACHE PATH "${PROJECT_NAME} apps install path")
-set( CMAKE_INSTALL_PREFIX ${${PROJECT_UPPER}_INSTALL_PREFIX} CACHE INTERNAL "" )
-
-#
-# Set up RPATH 
-##--------------------------------------------
-setup_rpath()
 
 include_directories(
   ${Qt5Core_INCLUDE_DIRS}
@@ -37,6 +30,7 @@ link_libraries(
   ${Qt5OpenGL_LIBRARIES}
   ${Qt5Xml_LIBRARIES}
   ${X11_LIBRARIES}
+  ${OPENGL_LIBRARIES}
 )
 
 include_directories( 
@@ -47,21 +41,17 @@ link_libraries(
   ${COIN3D_LIBRARIES}
 )
 
-add_build_switch( make        COIN3D_FOUND )
-add_build_switch( ivAddVP     COIN3D_FOUND )
-add_build_switch( ivcat       COIN3D_FOUND )
-add_build_switch( ivfix       COIN3D_FOUND )
-add_build_switch( ivgraph     COIN3D_FOUND )
-add_build_switch( ivinfo      COIN3D_FOUND )
-add_build_switch( ivnorm      COIN3D_FOUND )
-add_build_switch( ivToInclude COIN3D_FOUND )
-add_build_switch( ivvrml      COIN3D_FOUND )
-add_build_switch( ivview      COIN3D_FOUND AND COIN3D_SoQt_LIBRARY )
-add_build_switch( ivperf      COIN3D_FOUND AND COIN3D_SoQt_LIBRARY AND NOT APPLE)
+add_subdirectory( make       )
+add_subdirectory( ivAddVP    )
+add_subdirectory( ivcat      )
+add_subdirectory( ivfix      )
+add_subdirectory( ivgraph    )
+add_subdirectory( ivinfo     )
+add_subdirectory( ivnorm     )
+add_subdirectory( ivToInclude)
+add_subdirectory( ivvrml     )
+add_subdirectory( ivview     )
+add_subdirectory( ivperf     )
+add_subdirectory( ivFixCreatorVrml2 )
 
-add_build_switch( ivFixCreatorVrml2 Qt5_FOUND )
-
-#-----------------------------------
-print_build_switches()
-
-message(STATUS "*** install dir = ${CMAKE_INSTALL_PREFIX}")
+ament_package()
